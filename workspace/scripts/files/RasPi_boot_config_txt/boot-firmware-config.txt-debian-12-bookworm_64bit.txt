@@ -1,0 +1,36 @@
+# For more options and information see
+# http://rptl.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# Uncomment some or all of these to enable the optional hardware interfaces
+dtparam=i2c_arm=on,i2c_arm_baudrate=400000
+
+# Enable I2S audio output
+# dtparam=audio=on
+dtoverlay=hifiberry-dac
+
+# Additional overlays and parameters are documented
+# /boot/firmware/overlays/README
+
+# Automatically load overlays for detected cameras
+camera_auto_detect=0
+
+# Automatically load overlays for detected DSI displays
+display_auto_detect=0
+
+# Automatically load initramfs files, if found
+auto_initramfs=1
+
+# Run in 64-bit mode
+arm_64bit=1
+
+# Run as fast as firmware / board allows
+arm_boost=1
+
+[all]
+enable_uart=1
+disable_splash=1
+# We don't use HATs and official RasPi Dislay&Touch here, so switch the detection off
+force_eeprom_read=0
+ignore_lcd=1
+disable_touchscreen=1

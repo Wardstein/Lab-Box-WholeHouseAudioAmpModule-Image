@@ -1,0 +1,109 @@
+name: "Create Image"
+
+on: 
+  workflow_dispatch:
+    inputs:
+      # MAXIMUM 10 PARAMETERS POSSIBLE
+      default-user:
+        description: "Raspberry Pi User"
+        required: true
+        default: 'snapclient'
+      default-password:
+        description: "Raspberry Pi Password"
+        required: true
+        default: 'lab-box-snapclient'
+      
+
+jobs:
+  build:
+    name: "Build Image"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout Repo"
+      uses: actions/checkout@v3
+
+
+    - name: "Setup Environment"
+      run: |
+        # Source settings
+        IMAGE_BITWIDTH="32"     # Also used in the CustoPiZer scripts; Value can either be "32" or "64"
+        echo "IMAGE_BITWIDTH=$IMAGE_BITWIDTH" >> $GITHUB_ENV
+        # Build image name (to rename and zip)
+        IMAGE_NAME="lab-box_wholehouseaudioamp_module_image.img"
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+        IMAGE_NAME_ZIP="lab-box_wholehouseaudioamp_module_image.zip"
+        echo "IMAGE_NAME_ZIP=$IMAGE_NAME_ZIP" >> $GITHUB_ENV
+
+
+    - name: "Download RPi image"
+      id: download_rpi_image
+      run: |
+        mkdir build
+        cd build
+        echo "Using image width: \"${{ env.IMAGE_BITWIDTH }}\""
+        if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
+        then
+            # Download 32bit image
+            wget https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2024-10-28/2024-10-22-raspios-bookworm-armhf-lite.img.xz -q -O input.img.xz
+        elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
+        then
+            # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
+            # wget https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-28/2024-10-22-raspios-bookworm-arm64-lite.img.xz -q -O input.img.xz
+            exit 1
+        else
+            exit 1
+        fi
+        unxz -f input.img.xz
+
+
+    - name: "Run CustoPiZer"
+      uses: OctoPrint/CustoPiZer@1.2.0
+      with:
+        workspace: "${{ github.workspace }}/build"
+        scripts:  "${{ github.workspace }}/workspace/scripts"
+        config: "${{ github.workspace }}/config.local"
+        environment: '{ "IMAGE_BITWIDTH": "${{ env.IMAGE_BITWIDTH }}", "RASPI_HOSTNAME": "lab-box-snapclient", "RASPI_USER": "${{ github.event.inputs.default-user }}", "RASPI_PASSWORD": "${{ github.event.inputs.default-password }}", "GITHUB_ENV_SHA": "${{ github.sha }}", "GITHUB_ENV_REF_NAME": "${{ github.ref }}" }'
+
+
+    - name: "Prepare release"
+      run: |        
+        # release body
+        cat <<EOF > ./build/release.md
+  
+          * Lab-Box RasPi Whole House Audio Amp Module
+
+        Created with [CustoPiZer](https://github.com/OctoPrint/CustoPiZer)
+
+        <!-- mark:untested -->
+        EOF
+        
+        # Rename the image
+        cd build
+        mv output.img ${{ env.IMAGE_NAME }}
+
+
+    # https://github.com/OctoPrint/actions/tree/main/package-rpi-image
+    - name: "Package the image"
+      id: package-image
+      uses: OctoPrint/actions/package-rpi-image@main
+      with:
+        image_path: "build/${{ env.IMAGE_NAME }}"
+
+
+    # https://github.com/softprops/action-gh-release
+    # Needs "Workflow permissions" in Repo->Settings->Actions->Genernal set to "Read and write permissions"
+    - name: "Create release & attach assets"
+      uses: softprops/action-gh-release@v1
+      #if: github.event_name == 'repository_dispatch'
+      with:
+        name: "testing" #"${{ env.RELEASE_NAME }}"
+        tag_name: "testing-tag" #"${{ env.RELEASE_TAG }}"
+        body_path: "build/release.md"
+        prerelease: false #${{ contains(env.PIOREACTOR_VERSION, 'rc') }}
+        fail_on_unmatched_files: true
+        files: |
+          build/${{ env.IMAGE_NAME_ZIP }}
+          build/${{ env.IMAGE_NAME_ZIP }}.md5
+          build/${{ env.IMAGE_NAME_ZIP }}.sha256
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

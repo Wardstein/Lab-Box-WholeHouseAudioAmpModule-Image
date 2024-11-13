@@ -1,0 +1,18 @@
+set -x
+set -e
+
+export LC_ALL=C
+
+source /common.sh
+install_cleanup_trap
+
+# Scripts run as root by default
+
+# Put the raspi-firmware and linux packages on hold (exclude from updated) as it requires /boot/firmware to be present, but that is not the case until the first real boot!
+apt-mark hold raspi-firmware linux-headers* linux-image*
+
+apt-get update
+apt-get upgrade -y
+apt list --installed
+
+apt-mark unhold raspi-firmware linux-headers* linux-image*

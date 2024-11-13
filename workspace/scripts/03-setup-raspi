@@ -1,0 +1,104 @@
+set -x
+set -e
+
+export LC_ALL=C
+
+source /common.sh
+install_cleanup_trap
+
+# Scripts run as root by default
+
+# raspi-config cli documentation
+# https://www.raspberrypi.com/documentation/computers/configuration.html#raspi-config-cli
+
+
+
+# ADD OUR NEW DEFAULT USER ------------------------------------------------------------------------------------------------------------------------------------
+adduser --gecos "" --disabled-password $RASPI_USER
+chpasswd <<<"$RASPI_USER:$RASPI_PASSWORD"
+usermod -a -G users,adm,dialout,audio,netdev,video,plugdev,cdrom,games,input,gpio,spi,i2c,render,sudo $RASPI_USER
+# Show a control output which groups the user is in
+groups $RASPI_USER
+
+# Make sure user doesn't require a password when running as sudo; https://github.com/Pioreactor/CustoPiZer/blob/pioreactor/workspace/scripts/01-make-pioreactor-user.sh
+echo "$RASPI_USER ALL=(ALL) NOPASSWD: ALL" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/010_$RASPI_USER-nopasswd
+
+# Remove SSH pre-authentication banner
+rm -f /etc/ssh/sshd_config.d/rename_user.conf
+
+
+
+# REMOVE NOT NEEDED SOFTWARE ----------------------------------------------------------------------------------------------------------------------------------
+# https://github.com/gitbls/sdm/blob/master/plugins/disables#L90
+systemctl disable triggerhappy.service 
+systemctl disable triggerhappy.socket
+[ -f /lib/udev/rules.d/60-triggerhappy.rules ] && mv /lib/udev/rules.d/60-triggerhappy.rules /lib/udev/rules.d/.60-triggerhappy-save.rules
+[ -f /usr/sbin/thd ] && mv /usr/sbin/thd /usr/sbin/thd.save
+
+systemctl disable dphys-swapfile.service
+systemctl disable userconfig.service
+apt purge -y piwiz
+
+# Just unistalling pywiz does not solve the startup. We boot into "rpi-first-boot-wizard" user
+# https://forums.raspberrypi.com/viewtopic.php?p=2036168&sid=7e348ea4c90ad0c51def1eb973b20258#p2036168
+[ -f /etc/xdg/autostart/piwiz.desktop ] && mv /etc/xdg/autostart/piwiz.desktop /etc/xdg/autostart/.piwiz.desktop.save
+systemctl disable userconfig.service > /dev/null 2>&1
+systemctl mask    userconfig.service > /dev/null 2>&1
+[ "$(getent passwd rpi-first-boot-wizard)" != "" ] && userdel -r rpi-first-boot-wizard > /dev/null 2>&1
+[ -f /etc/systemd/system/getty@tty1.service.d/autologin.conf ] && mv /etc/systemd/system/getty@tty1.service.d/autologin.conf /etc/systemd/system/getty@tty1.service.d/.autologin.conf.save
+rm -f /etc/sudoers.d/010_wiz-nopasswd
+rm -f /etc/xdg/autostart/deluser.desktop
+
+
+# CREATE A ONE-TIME SETUP FILE --------------------------------------------------------------------------------------------------------------------------------
+FIRSTBOOT_FILE="/firstboot.sh"
+rm -f $FIRSTBOOT_FILE
+
+echo -e "#!/bin/bash\n\n" > $FIRSTBOOT_FILE
+
+# https://serverfault.com/a/103569
+#echo "exec 3>&1 4>&2" >> $FIRSTBOOT_FILE
+#echo "trap 'exec 2>&4 1>&3' 0 1 2 3" >> $FIRSTBOOT_FILE
+#echo "exec 1>/var/log/firstboot.log 2>&1" >> $FIRSTBOOT_FILE
+#echo -e "# Everything below will go to the file '/var/log/firstboot.log':\n\n" >> $FIRSTBOOT_FILE
+
+echo "echo \"raspi-config do_hostname\"" >> $FIRSTBOOT_FILE
+echo "raspi-config nonint do_hostname $RASPI_HOSTNAME" >> $FIRSTBOOT_FILE
+
+# Enable SSH for login
+echo "echo \"Enable SSH\"" >> $FIRSTBOOT_FILE
+# echo "raspi-config nonint do_ssh 0" >> $FIRSTBOOT_FILE
+echo "systemctl enable ssh" >> $FIRSTBOOT_FILE
+echo "systemctl start ssh" >> $FIRSTBOOT_FILE
+
+# Enable predictable network interface names
+echo "echo \"raspi-config do_net_names\"" >> $FIRSTBOOT_FILE
+echo "raspi-config nonint do_net_names 0" >> $FIRSTBOOT_FILE
+
+# Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
+
+echo "echo \"daemon-reload\"" >> $FIRSTBOOT_FILE
+echo "systemctl daemon-reload" >> $FIRSTBOOT_FILE
+# Writing to /boot/cmdline.txt and /boot/firmware/cmdline.txt as it is not exactly sure when the /boot folder content is moved to /boot/firmware
+echo "echo \"sed cmdline.txt\"" >> $FIRSTBOOT_FILE
+echo "sed -i 's| systemd.run.*||g' /boot/cmdline.txt" >> $FIRSTBOOT_FILE
+echo "sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt" >> $FIRSTBOOT_FILE
+echo "sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt" >> $FIRSTBOOT_FILE
+echo "sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt" >> $FIRSTBOOT_FILE
+echo "echo \"rm $FIRSTBOOT_FILE\"" >> $FIRSTBOOT_FILE
+echo "rm -f $FIRSTBOOT_FILE" >> $FIRSTBOOT_FILE
+echo "exit 0" >> $FIRSTBOOT_FILE
+echo "} 2>&1 | tee /var/log/firstboot.log" >> $FIRSTBOOT_FILE
+chmod +x $FIRSTBOOT_FILE
+
+cat $FIRSTBOOT_FILE
+# First replace a possible new line character at the end of the line, then append our new stuff
+sed -i ':a;N;$!ba;s/\n/ /g' /boot/cmdline.txt
+echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> /boot/cmdline.txt
+cat /boot/cmdline.txt
+EOF
+
+
+# Image information file --------------------------------------------------------------------------------------------------------------------------------------
+cp /files/README_Lab-Box_Image.txt /README_Lab-Box_Image.txt
+echo -e "\n\nImage was build from:\nGit branch: $GITHUB_ENV_REF_NAME\nCommit: $GITHUB_ENV_SHA" >> /README_Lab-Box_Image.txt
