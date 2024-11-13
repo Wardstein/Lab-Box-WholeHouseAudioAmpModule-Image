@@ -9,6 +9,6 @@ install_cleanup_trap
 # Scripts run as root by default
 
 
-# Install pyside2 and qml packages
+# Install general tools, audio packages and snapclient dependencies
 apt update
-apt install -y alsa-utils wget libvorbisidec1 git
+apt install -y wget git alsa-utils libvorbisidec1 libavahi-client3 libopus0 libsoxr0
