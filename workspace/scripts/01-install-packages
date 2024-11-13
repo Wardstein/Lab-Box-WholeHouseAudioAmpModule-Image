@@ -11,4 +11,4 @@ install_cleanup_trap
 
 # Install pyside2 and qml packages
 apt update
-apt install -y alsa-utils wget libvorbisidec1
+apt install -y alsa-utils wget libvorbisidec1 git

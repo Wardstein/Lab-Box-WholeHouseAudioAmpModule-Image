@@ -96,7 +96,6 @@ cat $FIRSTBOOT_FILE
 sed -i ':a;N;$!ba;s/\n/ /g' /boot/cmdline.txt
 echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> /boot/cmdline.txt
 cat /boot/cmdline.txt
-EOF
 
 
 # Image information file --------------------------------------------------------------------------------------------------------------------------------------
