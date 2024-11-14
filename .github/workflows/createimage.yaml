@@ -62,7 +62,7 @@ jobs:
         else
             exit 1
         fi
-        echo "$chosenImageInfo"
+        echo "${{ toJSON($chosenImageInfo) }}"
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
