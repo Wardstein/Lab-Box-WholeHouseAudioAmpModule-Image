@@ -49,15 +49,17 @@ jobs:
     - name: "Select image info"
       id: selectImageInfo
       run: |
+        jsonSelector="x${{ env.IMAGE_BITWIDTH }}"
+        echo $jsonSelector
         echo "Using image width: \"${{ env.IMAGE_BITWIDTH }}\""
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
             # Download 32bit image
-            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32 }}
+            chosenImageInfo=`echo ${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }} | jq --arg keyvar "$jsonSelector" ' .keyvar'`
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64 }}
+            chosenImageInfo=`echo ${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }} | jq --arg keyvar "$jsonSelector" ' .keyvar'`
             exit 1
         else
             exit 1
@@ -67,11 +69,10 @@ jobs:
 
     - name: "Download RPi image"
       id: downloadRasPiImage
-      env:
-        imageUrl: ${{ steps.selectImageInfo.outputs.chosenImageInfo.urlHttp }}
       run: |
         mkdir build
         cd build
+        imageUrl=`echo ${{ steps.selectImageInfo.outputs.chosenImageInfo }} | jq '.urlHttp'`
         echo "Downloading image from URL: $imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
