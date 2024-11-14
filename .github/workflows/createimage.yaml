@@ -34,6 +34,18 @@ jobs:
         IMAGE_NAME_ZIP="lab-box_wholehouseaudioamp_module_image.zip"
         echo "IMAGE_NAME_ZIP=$IMAGE_NAME_ZIP" >> $GITHUB_ENV
 
+    - name: "Setup Python"
+      uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+    - name: "Get latest Rasberry Pi OS image URLs"
+      id: getRasPiImageUrls
+      run: |
+        linksJson=`python getRasPiLatestImageDownloadUrls.py`
+        echo "$linksJson"
+        echo "rasPiImagesInfo=$linksJson" >> $GITHUB_OUTPUT
+        
 
     - name: "Download RPi image"
       id: download_rpi_image
@@ -44,11 +56,11 @@ jobs:
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
             # Download 32bit image
-            wget https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2024-10-28/2024-10-22-raspios-bookworm-armhf-lite.img.xz -q -O input.img.xz
+            wget ${{ fromJson(${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}).x32.urlHttp }} -q -O input.img.xz
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            # wget https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-28/2024-10-22-raspios-bookworm-arm64-lite.img.xz -q -O input.img.xz
+            # wget ${{ fromJson(${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}).x64.urlHttp }} -q -O input.img.xz
             exit 1
         else
             exit 1
