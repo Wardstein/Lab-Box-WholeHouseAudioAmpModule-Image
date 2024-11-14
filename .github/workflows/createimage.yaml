@@ -36,8 +36,8 @@ jobs:
 
     - name: "Setup Python"
       uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
+      with:
+        python-version: 3.13
 
     - name: "Get latest Rasberry Pi OS image URLs"
       id: getRasPiImageUrls
