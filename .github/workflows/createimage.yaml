@@ -45,13 +45,10 @@ jobs:
         linksJson=`python getRasPiLatestImageDownloadUrls.py`
         echo "$linksJson"
         echo "rasPiImagesInfo=$linksJson" >> $GITHUB_OUTPUT
-        
-
-    - name: "Download RPi image"
-      id: downloadRasPiImage
+    
+    - name: "Select image info"
+      id: selectImageInfo
       run: |
-        mkdir build
-        cd build
         echo "Using image width: \"${{ env.IMAGE_BITWIDTH }}\""
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
@@ -66,7 +63,13 @@ jobs:
             exit 1
         fi
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
-        $imageUrl = ${{ fromJson(steps.downloadRasPiImage.outputs.chosenImageInfo).urlHttp }}
+
+    - name: "Download RPi image"
+      id: downloadRasPiImage
+      run: |
+        mkdir build
+        cd build
+        imageUrl = ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).urlHttp }}
         echo "Downloading image from URL: "$imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
@@ -88,11 +91,11 @@ jobs:
         Image for the [Lab-Box Whole House Audio Amp Module](https://github.com/Wardstein/Lab-Box/Modules/Whole%20House%20Audio%20Amp) Raspberry Pi Zero
 
         Created from the original Raspberry Pi image:
-        * Released on: ${{ fromJson(steps.downloadRasPiImage.outputs.chosenImageInfo).releaseDate }}
-        * Architecture: ${{ fromJson(steps.downloadRasPiImage.outputs.chosenImageInfo).system }}
-        * Debian Version: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).debianVersion }}
-        * Kernel Version: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).kernelVersion }}
-        * Release Notes: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).releaseNotes }}
+        * Released on: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).releaseDate }}
+        * Architecture: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).system }}
+        * Debian Version: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).debianVersion }}
+        * Kernel Version: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).kernelVersion }}
+        * Release Notes: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).releaseNotes }}
 
         Default credentials:
         * User: "${{ github.event.inputs.default-user }}"
