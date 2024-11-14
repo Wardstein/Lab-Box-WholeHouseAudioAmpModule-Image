@@ -72,7 +72,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        echo "Downloading image from URL: "$imageUrl"
+        echo "Downloading image from URL: $imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
 
