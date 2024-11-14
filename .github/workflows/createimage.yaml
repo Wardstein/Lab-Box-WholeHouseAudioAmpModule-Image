@@ -66,7 +66,7 @@ jobs:
             exit 1
         fi
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
-        $imageUrl = ${{ fromJson($chosenImageInfo).urlHttp }}
+        $imageUrl = ${{ fromJson(chosenImageInfo).urlHttp }}
         echo "Downloading image from URL: "$imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
