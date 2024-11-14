@@ -76,7 +76,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        imageUrl=`echo ${{ steps.selectImageInfo.outputs.chosenImageInfo }} | jq '.urlHttp'`
+        imageUrl=`jq -r '.urlHttp' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
         echo "Downloading image from URL: $imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
@@ -92,17 +92,23 @@ jobs:
 
 
     - name: "Prepare release"
-      run: |        
+      run: |
+        releasedOn=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
+        architecture=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.system }}'`
+        debianVersion=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.debianVersion }}'`
+        kernelVersion=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.kernelVersion }}'`
+        releaseNotes=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.releaseNotes }}'`
+        
         # release body
         cat <<EOF > ./build/release.md
         Image for the [Lab-Box Whole House Audio Amp Module](https://github.com/Wardstein/Lab-Box/Modules/Whole%20House%20Audio%20Amp) Raspberry Pi Zero
 
         Created from the original Raspberry Pi image:
-        * Released on: ${{ steps.selectImageInfo.outputs.chosenImageInfo.releaseDate }}
-        * Architecture: ${{ steps.selectImageInfo.outputs.chosenImageInfo.system }}
-        * Debian Version: ${{ steps.selectImageInfo.outputs.chosenImageInfo.debianVersion }}
-        * Kernel Version: ${{ steps.selectImageInfo.outputs.chosenImageInfo.kernelVersion }}
-        * Release Notes: ${{ steps.selectImageInfo.outputs.chosenImageInfo.releaseNotes }}
+        * Released on: $releasedOn
+        * Architecture: $architecture
+        * Debian Version: $debianVersion
+        * Kernel Version: $kernelVersion
+        * Release Notes: $releaseNotes
 
         Default credentials:
         * User: "${{ github.event.inputs.default-user }}"
