@@ -63,15 +63,15 @@ jobs:
             exit 1
         fi
         echo "$chosenImageInfo"
-        echo "${{toJson($chosenImageInfo")}}"
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
       id: downloadRasPiImage
+      env:
+        imageUrl: ${{ steps.selectImageInfo.outputs.chosenImageInfo.urlHttp }}
       run: |
         mkdir build
         cd build
-        imageUrl=${{ steps.selectImageInfo.outputs.chosenImageInfo.urlHttp }}
         echo "Downloading image from URL: "$imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
