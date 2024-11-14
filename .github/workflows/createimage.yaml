@@ -39,37 +39,24 @@ jobs:
       with:
         python-version: 3.13
 
+
     - name: "Get latest Rasberry Pi OS image URLs"
       id: getRasPiImageUrls
       run: |
         linksJson=`python getRasPiLatestImageDownloadUrls.py`
         echo "$linksJson"
         echo "rasPiImagesInfo=$linksJson" >> $GITHUB_OUTPUT
+
     
     - name: "Select image info"
       id: selectImageInfo
       run: |
-        jsonSelector="x${{ env.IMAGE_BITWIDTH }}"
-        echo $jsonSelector
         echo "Using image width: \"${{ env.IMAGE_BITWIDTH }}\""
-        if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
-        then
-            # Download 32bit image
-            # chosenImageInfo=`echo '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' | jq ".$jsonSelector"`
-            chosenImageInfo=$( jq --compact-output -r ".$jsonSelector" <<< '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' ) 
-        elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
-        then
-            # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            chosenImageInfo=`echo ${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }} | jq --arg keyvar "$jsonSelector" '.keyvar'`
-            exit 1
-        else
-            exit 1
-        fi
+        jsonSelector="x${{ env.IMAGE_BITWIDTH }}"
+        chosenImageInfo=$( jq --compact-output -r ".$jsonSelector" <<< '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' ) 
         echo "$chosenImageInfo"
-        # echo "chosenImageInfo=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g'
-        # echo $(echo "test=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g') >> $GITHUB_OUTPUT
-        # echo "chosenImageInfo=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g' >> $GITHUB_OUTPUT
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
+
 
     - name: "Download RPi image"
       id: downloadRasPiImage
@@ -94,10 +81,10 @@ jobs:
     - name: "Prepare release"
       run: |
         releasedOn=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
-        architecture=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.system }}'`
-        debianVersion=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.debianVersion }}'`
-        kernelVersion=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.kernelVersion }}'`
-        releaseNotes=`jq -r '.releaseDate' <<< '${{ steps.selectImageInfo.outputs.releaseNotes }}'`
+        architecture=`jq -r '.system' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
+        debianVersion=`jq -r '.debianVersion' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
+        kernelVersion=`jq -r '.kernelVersion' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
+        releaseNotes=`jq -r '.releaseNotes' <<< '${{ steps.selectImageInfo.outputs.chosenImageInfo }}'`
         
         # release body
         cat <<EOF > ./build/release.md
