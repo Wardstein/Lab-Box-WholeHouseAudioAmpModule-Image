@@ -48,7 +48,7 @@ jobs:
         
 
     - name: "Download RPi image"
-      id: download_rpi_image
+      id: downloadRasPiImage
       run: |
         mkdir build
         cd build
@@ -56,15 +56,19 @@ jobs:
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
             # Download 32bit image
-            wget ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32.urlHttp }} -q -O input.img.xz
+            chosenImageInfo = ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32 }}
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            # wget ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64.urlHttp }} -q -O input.img.xz
+            chosenImageInfo = ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64 }}
             exit 1
         else
             exit 1
         fi
+        echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
+        $imageUrl = ${{ fromJson($chosenImageInfo).urlHttp }}
+        echo "Downloading image from URL: "$imageUrl"
+        wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
 
 
@@ -81,12 +85,20 @@ jobs:
       run: |        
         # release body
         cat <<EOF > ./build/release.md
-  
-          * Lab-Box RasPi Whole House Audio Amp Module
+        Image for the [Lab-Box Whole House Audio Amp Module](https://github.com/Wardstein/Lab-Box/Modules/Whole%20House%20Audio%20Amp) Raspberry Pi Zero
+
+        Created from the original Raspberry Pi image:
+        * Released on: ${{ fromJson(steps.downloadRasPiImage.outputs.chosenImageInfo).releaseDate }}
+        * Architecture: ${{ fromJson(steps.downloadRasPiImage.outputs.chosenImageInfo).system }}
+        * Debian Version: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).debianVersion }}
+        * Kernel Version: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).kernelVersion }}
+        * Release Notes: ${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).releaseNotes }}
+
+        Default credentials:
+        * User: "${{ github.event.inputs.default-user }}"
+        * Password: "${{ github.event.inputs.default-password }}"
 
         Created with [CustoPiZer](https://github.com/OctoPrint/CustoPiZer)
-
-        <!-- mark:untested -->
         EOF
         
         # Rename the image
