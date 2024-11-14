@@ -1,4 +1,7 @@
 {
-	"x32": "https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_armhf_bookworm.deb",
-	"x64": "https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_arm64_bookworm.deb"
+	"v0.29.0":
+	{
+		"x32": "https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_armhf_bookworm.deb",
+		"x64": "https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_arm64_bookworm.deb"
+	}
 }

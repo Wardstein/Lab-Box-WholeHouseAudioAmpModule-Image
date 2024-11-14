@@ -7,7 +7,11 @@ on:
       release-name:
         description: "Name of the release"
         required: true
-        # default: ''
+      snapclient-version:
+        description: "The version of scnapclient to install"
+        required: true
+        options:
+        - v0.29.0
       default-user:
         description: "Raspberry Pi User"
         required: true
@@ -38,10 +42,11 @@ jobs:
         IMAGE_NAME_ZIP="lab-box_wholehouseaudioamp_module_image.zip"
         echo "IMAGE_NAME_ZIP=$IMAGE_NAME_ZIP" >> $GITHUB_ENV
         
-        SNAPCLIENT_URL_X32=`jq .x32 snapclient_versions.json`
+        SNAPCLIENT_URL_X32=`jq ".${{ github.event.inputs.snapclient-version }}.x32" snapclient_versions.json`
         echo "SNAPCLIENT_URL_X32=$SNAPCLIENT_URL_X32" >> $GITHUB_ENV
-        SNAPCLIENT_URL_X64=`jq .x64 snapclient_versions.json`
+        SNAPCLIENT_URL_X64=`jq ".${{ github.event.inputs.snapclient-version }}.x64" snapclient_versions.json`
         echo "SNAPCLIENT_URL_X64=$SNAPCLIENT_URL_X64" >> $GITHUB_ENV
+
 
     - name: "Setup Python"
       uses: actions/setup-python@v4
@@ -84,7 +89,7 @@ jobs:
         workspace: "${{ github.workspace }}/build"
         scripts:  "${{ github.workspace }}/workspace/scripts"
         config: "${{ github.workspace }}/config.local"
-        environment: '{ "IMAGE_BITWIDTH": "${{ env.IMAGE_BITWIDTH }}", "RASPI_HOSTNAME": "lab-box-snapclient", "RASPI_USER": "${{ github.event.inputs.default-user }}", "RASPI_PASSWORD": "${{ github.event.inputs.default-password }}", "GITHUB_ENV_SHA": "${{ github.sha }}", "GITHUB_ENV_REF_NAME": "${{ github.ref }}" }'
+        environment: '{ "IMAGE_BITWIDTH": "${{ env.IMAGE_BITWIDTH }}", "RASPI_HOSTNAME": "lab-box-snapclient", "RASPI_USER": "${{ github.event.inputs.default-user }}", "RASPI_PASSWORD": "${{ github.event.inputs.default-password }}", "SNAPCLIENT_URL_X32": "${{ env.SNAPCLIENT_URL_X32 }}", "SNAPCLIENT_URL_X64": "${{ env.SNAPCLIENT_URL_X64 }}", "GITHUB_ENV_SHA": "${{ github.sha }}", "GITHUB_ENV_REF_NAME": "${{ github.ref }}" }'
 
 
     - name: "Prepare release"
@@ -98,6 +103,8 @@ jobs:
         # release body
         cat <<EOF > ./build/release.md
         Image for the [Lab-Box Whole House Audio Amp Module](https://github.com/Wardstein/Lab-Box/Modules/Whole%20House%20Audio%20Amp) Raspberry Pi Zero
+        
+        Snapclient Version: ${{ github.event.inputs.snapclient-version }}
 
         Created from the original Raspberry Pi image:
         * Released on: $releasedOn
