@@ -16,9 +16,13 @@ cd /home/$RASPI_USER
 echo_green "Using image width: \"$IMAGE_BITWIDTH\""
 
 if [ "$IMAGE_BITWIDTH" == "32" ]; then
-	wget -O snapclient.deb https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_armhf_bookworm.deb
+	# wget -O snapclient.deb https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_armhf_bookworm.deb
+	# The env variable should be populated in the Github Action pipeline depending on the settings in the repo json file
+	wget -O snapclient.deb $SNAPCLIENT_URL_X32
 elif [ "$IMAGE_BITWIDTH" == "64" ]; then
-	wget -O snapclient.deb https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_arm64_bookworm.deb
+	# wget -O snapclient.deb https://github.com/badaix/snapcast/releases/download/v0.29.0/snapclient_0.29.0-1_arm64_bookworm.deb
+	# The env variable should be populated in the Github Action pipeline depending on the settings in the repo json file
+	wget -O snapclient.deb $SNAPCLIENT_URL_X64
 else
 	echo_red "UNKNOWN IMAGE_BITWIDTH VALUE: \"$IMAGE_BITWIDTH\""
 	exit 1
