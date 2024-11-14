@@ -53,16 +53,17 @@ jobs:
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
             # Download 32bit image
-            chosenImageInfo=toJson(fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32)
+            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32 }}
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            chosenImageInfo=toJson(fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64)
+            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64 }}
             exit 1
         else
             exit 1
         fi
         echo "$chosenImageInfo"
+        echo "${{toJson($chosenImageInfo")}}"
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
