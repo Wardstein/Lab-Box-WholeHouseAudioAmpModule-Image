@@ -43,9 +43,9 @@ jobs:
         IMAGE_NAME_ZIP="lab-box_wholehouseaudioamp_module_image.zip"
         echo "IMAGE_NAME_ZIP=$IMAGE_NAME_ZIP" >> $GITHUB_ENV
         
-        SNAPCLIENT_URL_X32=`jq --arg versionkey "${{ github.event.inputs.snapclient-version }}" '.($versionkey).x32' snapclient_versions.json`
+        SNAPCLIENT_URL_X32=`jq --arg versionkey "${{ github.event.inputs.snapclient-version }}" ".($versionkey).x32" snapclient_versions.json`
         echo "SNAPCLIENT_URL_X32=$SNAPCLIENT_URL_X32" >> $GITHUB_ENV
-        SNAPCLIENT_URL_X64=`jq --arg versionkey "${{ github.event.inputs.snapclient-version }}" '.($versionkey).x64' snapclient_versions.json`
+        SNAPCLIENT_URL_X64=`jq --arg versionkey "${{ github.event.inputs.snapclient-version }}" ".($versionkey).x64" snapclient_versions.json`
         echo "SNAPCLIENT_URL_X64=$SNAPCLIENT_URL_X64" >> $GITHUB_ENV
 
 
