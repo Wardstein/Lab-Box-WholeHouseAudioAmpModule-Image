@@ -62,6 +62,7 @@ jobs:
         else
             exit 1
         fi
+        echo "$chosenImageInfo"
         echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
