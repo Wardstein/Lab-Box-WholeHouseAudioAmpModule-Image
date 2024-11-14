@@ -53,11 +53,11 @@ jobs:
         if [ "${{ env.IMAGE_BITWIDTH }}" == "32" ]
         then
             # Download 32bit image
-            chosenImageInfo=${{ toJson(fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32) }}
+            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x32 }}
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
-            chosenImageInfo=${{ toJson(fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64) }}
+            chosenImageInfo=${{ fromJson(steps.getRasPiImageUrls.outputs.rasPiImagesInfo).x64 }}
             exit 1
         else
             exit 1
@@ -69,7 +69,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        imageUrl=${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).urlHttp }}
+        imageUrl=${{ steps.selectImageInfo.outputs.chosenImageInfo.urlHttp }}
         echo "Downloading image from URL: "$imageUrl"
         wget $imageUrl -q -O input.img.xz
         unxz -f input.img.xz
@@ -91,11 +91,11 @@ jobs:
         Image for the [Lab-Box Whole House Audio Amp Module](https://github.com/Wardstein/Lab-Box/Modules/Whole%20House%20Audio%20Amp) Raspberry Pi Zero
 
         Created from the original Raspberry Pi image:
-        * Released on: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).releaseDate }}
-        * Architecture: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).system }}
-        * Debian Version: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).debianVersion }}
-        * Kernel Version: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).kernelVersion }}
-        * Release Notes: ${{ fromJson(steps.selectImageInfo.outputs.chosenImageInfo).releaseNotes }}
+        * Released on: ${{ steps.selectImageInfo.outputs.chosenImageInfo.releaseDate }}
+        * Architecture: ${{ steps.selectImageInfo.outputs.chosenImageInfo.system }}
+        * Debian Version: ${{ steps.selectImageInfo.outputs.chosenImageInfo.debianVersion }}
+        * Kernel Version: ${{ steps.selectImageInfo.outputs.chosenImageInfo.kernelVersion }}
+        * Release Notes: ${{ steps.selectImageInfo.outputs.chosenImageInfo.releaseNotes }}
 
         Default credentials:
         * User: "${{ github.event.inputs.default-user }}"
