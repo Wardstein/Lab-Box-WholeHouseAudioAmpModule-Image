@@ -8,10 +8,11 @@ on:
         description: "Name of the release"
         required: true
       snapclient-version:
-        description: "The version of scnapclient to install"
+        type: choice
+        description: "The version of snapclient to install"
         required: true
         options:
-        - v0.29.0
+        - "v0.29.0"
       default-user:
         description: "Raspberry Pi User"
         required: true
