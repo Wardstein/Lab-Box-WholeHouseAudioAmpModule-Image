@@ -66,7 +66,9 @@ jobs:
             exit 1
         fi
         echo "$chosenImageInfo"
-        echo 'chosenImageInfo='"$chosenImageInfo" >> $GITHUB_OUTPUT
+        echo "chosenImageInfo=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g'
+        echo $(echo "test=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g') >> $GITHUB_OUTPUT
+        echo "chosenImageInfo=$chosenImageInfo" | sed -E 's/([^\]|^)"/\1\\"/g' >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
       id: downloadRasPiImage
