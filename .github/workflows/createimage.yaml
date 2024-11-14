@@ -56,7 +56,7 @@ jobs:
         then
             # Download 32bit image
             # chosenImageInfo=`echo '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' | jq ".$jsonSelector"`
-            chosenImageInfo=$( jq -r ".$jsonSelector" <<< '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' ) 
+            chosenImageInfo=$( jq --compact-output -r ".$jsonSelector" <<< '${{ steps.getRasPiImageUrls.outputs.rasPiImagesInfo }}' ) 
         elif [ "${{ env.IMAGE_BITWIDTH }}" == "64" ] 
         then
             # TODO: 64 BIT IMAGE MAKES PROBLEMS WITH CustoPiZer/chroot IN THE GITHUB RUNNER. NEED TO INVESTIGATE
