@@ -66,7 +66,7 @@ jobs:
             exit 1
         fi
         echo "$chosenImageInfo"
-        echo "chosenImageInfo=$chosenImageInfo" >> $GITHUB_OUTPUT
+        echo 'chosenImageInfo='"$chosenImageInfo" >> $GITHUB_OUTPUT
 
     - name: "Download RPi image"
       id: downloadRasPiImage
