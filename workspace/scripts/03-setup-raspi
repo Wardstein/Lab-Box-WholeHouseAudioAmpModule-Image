@@ -106,9 +106,10 @@ chmod +x $FIRSTBOOT_FILE
 
 cat $FIRSTBOOT_FILE
 
-# Replace a possible new line character at the end of the line, then append our new stuff
-# sed -i ':a;N;$!ba;s/\n/ /g' $CMDLINE_FILE		# Does not seem to work
-tr -d '\n' < $CMDLINE_FILE
+# Move the original file to a backup file, replace a possible new line character at the end of the line and write it to the original filename, then append our new stuff
+# The 2 double quotes between the variable and the appendix _org is intentional. This appends the variable and "_org" string.
+mv $CMDLINE_FILE "$CMDLINE_FILE""_org"
+tr -d '\n' < "$CMDLINE_FILE""_org" > $CMDLINE_FILE
 echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
 cat $CMDLINE_FILE
 
