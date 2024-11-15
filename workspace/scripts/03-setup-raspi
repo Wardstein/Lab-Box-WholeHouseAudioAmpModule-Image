@@ -50,52 +50,56 @@ rm -f /etc/sudoers.d/010_wiz-nopasswd
 rm -f /etc/xdg/autostart/deluser.desktop
 
 
+
+CMDLINE_FILE="/boot/firmware/cmdline.txt"
+
+
 # CREATE A ONE-TIME SETUP FILE --------------------------------------------------------------------------------------------------------------------------------
 FIRSTBOOT_FILE="/firstboot.sh"
 rm -f $FIRSTBOOT_FILE
 
-echo -e "#!/bin/bash\n\n" > $FIRSTBOOT_FILE
+# Source of the logging to file method: https://stackoverflow.com/a/315113/3402598
 
-# https://serverfault.com/a/103569
-#echo "exec 3>&1 4>&2" >> $FIRSTBOOT_FILE
-#echo "trap 'exec 2>&4 1>&3' 0 1 2 3" >> $FIRSTBOOT_FILE
-#echo "exec 1>/var/log/firstboot.log 2>&1" >> $FIRSTBOOT_FILE
-#echo -e "# Everything below will go to the file '/var/log/firstboot.log':\n\n" >> $FIRSTBOOT_FILE
+cat <<EOF > $FIRSTBOOT_FILE
+#!/bin/bash\n" 
 
-echo "echo \"raspi-config do_hostname\"" >> $FIRSTBOOT_FILE
-echo "raspi-config nonint do_hostname $RASPI_HOSTNAME" >> $FIRSTBOOT_FILE
+{		# Everything in the brackets will go to the log file\n" >> 
+
+echo "raspi-config do_hostname"
+raspi-config nonint do_hostname $RASPI_HOSTNAME
 
 # Enable SSH for login
-echo "echo \"Enable SSH\"" >> $FIRSTBOOT_FILE
-# echo "raspi-config nonint do_ssh 0" >> $FIRSTBOOT_FILE
-echo "systemctl enable ssh" >> $FIRSTBOOT_FILE
-echo "systemctl start ssh" >> $FIRSTBOOT_FILE
+echo "Enable SSH"
+systemctl enable ssh
+systemctl start ssh
 
 # Enable predictable network interface names
-echo "echo \"raspi-config do_net_names\"" >> $FIRSTBOOT_FILE
-echo "raspi-config nonint do_net_names 0" >> $FIRSTBOOT_FILE
+echo "raspi-config do_net_names"
+raspi-config nonint do_net_names 0
 
 # Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
 
-echo "echo \"daemon-reload\"" >> $FIRSTBOOT_FILE
-echo "systemctl daemon-reload" >> $FIRSTBOOT_FILE
-# Writing to /boot/cmdline.txt and /boot/firmware/cmdline.txt as it is not exactly sure when the /boot folder content is moved to /boot/firmware
-echo "echo \"sed cmdline.txt\"" >> $FIRSTBOOT_FILE
-echo "sed -i 's| systemd.run.*||g' /boot/cmdline.txt" >> $FIRSTBOOT_FILE
-echo "sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt" >> $FIRSTBOOT_FILE
-echo "sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt" >> $FIRSTBOOT_FILE
-echo "sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt" >> $FIRSTBOOT_FILE
-echo "echo \"rm $FIRSTBOOT_FILE\"" >> $FIRSTBOOT_FILE
-echo "rm -f $FIRSTBOOT_FILE" >> $FIRSTBOOT_FILE
-echo "exit 0" >> $FIRSTBOOT_FILE
-echo "} 2>&1 | tee /var/log/firstboot.log" >> $FIRSTBOOT_FILE
+echo "daemon-reload"
+systemctl daemon-reload
+
+# Removing systemd start arguments in the cmdline.txt to be replaced down below with our own firstboot.sh script
+echo "sed cmdline.txt"
+sed -i 's| systemd.run.*||g' $CMDLINE_FILE
+sed -i 's| systemd.unit=kernel.*||g' $CMDLINE_FILE
+echo "rm $FIRSTBOOT_FILE"
+rm -f $FIRSTBOOT_FILE
+exit 0
+} 2>&1 | tee /var/log/firstboot.log
+EOF
+
 chmod +x $FIRSTBOOT_FILE
 
 cat $FIRSTBOOT_FILE
-# First replace a possible new line character at the end of the line, then append our new stuff
-sed -i ':a;N;$!ba;s/\n/ /g' /boot/cmdline.txt
-echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> /boot/cmdline.txt
-cat /boot/cmdline.txt
+
+# Replace a possible new line character at the end of the line, then append our new stuff
+sed -i ':a;N;$!ba;s/\n/ /g' $CMDLINE_FILE
+echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
+cat $CMDLINE_FILE
 
 
 # Image information file --------------------------------------------------------------------------------------------------------------------------------------
