@@ -107,7 +107,8 @@ chmod +x $FIRSTBOOT_FILE
 cat $FIRSTBOOT_FILE
 
 # Replace a possible new line character at the end of the line, then append our new stuff
-sed -i ':a;N;$!ba;s/\n/ /g' $CMDLINE_FILE
+# sed -i ':a;N;$!ba;s/\n/ /g' $CMDLINE_FILE		# Does not seem to work
+tr -d '\n' < $CMDLINE_FILE
 echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
 cat $CMDLINE_FILE
 
