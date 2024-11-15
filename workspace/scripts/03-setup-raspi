@@ -50,8 +50,15 @@ rm -f /etc/sudoers.d/010_wiz-nopasswd
 rm -f /etc/xdg/autostart/deluser.desktop
 
 
-
-CMDLINE_FILE="/boot/firmware/cmdline.txt"
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Despite the config.txt and cmdline.txt are moved into /boot/firmware folders, we write to the /boot folder directly.
+# The files from the boot folder are automatically moved into the /boot/firmware folder on first start (at time of writing 13.11.2024)
+# https://github.com/raspberrypi/documentation/issues/3089
+CMDLINE_FILE="/boot/cmdline.txt"
+# If the /boot/firmware folder should exist in the future, this should then set the correct path in the future
+if [ -d /boot/firmware ]; then
+	CMDLINE_FILE="/boot/firmware/cmdline.txt"
+fi
 
 
 # CREATE A ONE-TIME SETUP FILE --------------------------------------------------------------------------------------------------------------------------------
@@ -83,9 +90,12 @@ echo "daemon-reload"
 systemctl daemon-reload
 
 # Removing systemd start arguments in the cmdline.txt to be replaced down below with our own firstboot.sh script
+# As we do not know when exactly the cmdline.txt file is moved, we try it in both paths
 echo "sed cmdline.txt"
-sed -i 's| systemd.run.*||g' $CMDLINE_FILE
-sed -i 's| systemd.unit=kernel.*||g' $CMDLINE_FILE
+sed -i 's| systemd.run.*||g' /boot/cmdline.txt
+sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt
+sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt
+sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt
 echo "rm $FIRSTBOOT_FILE"
 rm -f $FIRSTBOOT_FILE
 exit 0

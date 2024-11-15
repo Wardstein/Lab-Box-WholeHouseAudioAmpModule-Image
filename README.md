@@ -3,8 +3,8 @@ This repo contains a pipeline to build the SD card image for the [Lab-Box Whole 
 
 Tasks this pipeline does:
 * Update the base image
-* ----Installs the boot config for the Raspberry Pi to use all the needed hardware of the Pi
-* ---Modifies the base image with a new user, and other settings
+* Installs the boot config for the Raspberry Pi to use all the needed hardware of the Pi
+* Modifies the base image with a new user, and other settings
 * Installes snapclient software
 * And finally cleans and packs the image
 
