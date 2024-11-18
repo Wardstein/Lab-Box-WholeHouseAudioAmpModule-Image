@@ -91,9 +91,9 @@ echo "Destroy firstboot script"
 echo "rm $FIRSTBOOT_FILE"
 rm -f $FIRSTBOOT_FILE
 
-echo "Restore original rc.local"
-rm -f /etc/rc.local
-mv /etc/rc.local.bak /etc/rc.local
+# echo "Restore original rc.local"
+# rm -f /etc/rc.local
+# mv /etc/rc.local.bak /etc/rc.local
 
 echo "Exit..."
 exit 0
@@ -101,16 +101,9 @@ exit 0
 EOF
 
 chmod +x $FIRSTBOOT_FILE
-
 cat $FIRSTBOOT_FILE
 
-# # # # # Move the original file to a backup file, replace a possible new line character at the end of the line and write it to the original filename, then append our new stuff
-# # # # # The 2 double quotes between the variable and the appendix _org is intentional. This appends the variable and "_org" string.
-# # # # mv $CMDLINE_FILE "$CMDLINE_FILE""_org"
-# # # # tr -d '\n' < "$CMDLINE_FILE""_org" > $CMDLINE_FILE
-# # # # echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
-# # # # cat $CMDLINE_FILE
-mv /etc/rc.local /etc/rc.local.bak
+# mv /etc/rc.local /etc/rc.local.bak
 cat <<EOF > /etc/rc.local
 /$FIRSTBOOT_FILE
 EOF
