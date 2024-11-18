@@ -19,6 +19,10 @@ To flash an SD card, I can recommend using the [Raspberry Pi Imager](https://www
 Alternatively you can use [Balena Etcher](https://etcher.balena.io/), but it does not offer customizing any settings in the image.
 
 
+# Setting Up Snapserver
+* When using "auto connect" via mDNS (the clients finds the server automatically in the network) and you have IPv6 enabled on the client (by default on this image), the server must listen on IPv6 also. All modern OSes prefer IPv6 over IPv4, so the snapclient tries to connect to the server via IPv6. To enable the server listening on IPv6, add `bind_to_address = ::` in the `[stream]` section of the `/etc/snapserver.conf` config file. Defining `bind_to_address = ::` in the config file, will automatically also listen on IPv4.
+
+
 # Missing
 
 

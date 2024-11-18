@@ -1,0 +1,12 @@
+[Unit]
+Description=Audio Device Playing Watcher for Lab-Box WholeHouse Audio Amp Module
+After=network.target
+
+[Service]
+Type=idle
+Restart=on-failure
+User=root
+ExecStart=/bin/bash -c 'cd /root/audioDevicePlayingWatcher/ && python audioDevicePlayingWatcher.py'
+
+[Install]
+WantedBy=multi-user.target

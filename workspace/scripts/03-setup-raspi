@@ -62,53 +62,47 @@ fi
 
 
 # CREATE A ONE-TIME SETUP FILE --------------------------------------------------------------------------------------------------------------------------------
-# COMMENTED OUT, AS I CANNOT GET IT TO WORK IN DEBIAN 12 BOOKWORM ANYMORE. EVERYTIME THE START ERRORS AT STARTUP AND IT TELLS, THAT DEPENDENCIES FAILED FOR
-# FOR "kernel-command-line.target". DON'T KNOW IF THE SCRIPT IS NOT READABLE AT THIS POINT (DOES NOT MATTER IF THE SCRIPT IS IN / OR /BOOT)
-# GIVING UP ON THIS, AS THE RASPBERRY PI IMAGER USES THE SAME METHOD WITH THEIR OWN INIT SCRIPTS FOR THEIR SETTINGS ALSO WHICH IF USED MESSES UP THIS SCRIPT HERE ALSO!
+# THE RASPBERRY PI IMAGER USES THE CMDLINE.TXT SYSTEMD.RUN METHOD WITH THEIR OWN INIT SCRIPTS FOR THEIR SETTINGS.
+# So we use the rc.local file to run our setup script and then restore the original rc.local file from the image.
 
-# # # # FIRSTBOOT_FILE="/firstboot.sh"
-# # # # rm -f $FIRSTBOOT_FILE
+FIRSTBOOT_FILE="/lab-box-firstboot.sh"
+rm -f $FIRSTBOOT_FILE
 
-# # # # # Source of the logging to file method: https://stackoverflow.com/a/315113/3402598
+# Source of the logging to file method: https://stackoverflow.com/a/315113/3402598
 
-# # # # cat <<EOF > $FIRSTBOOT_FILE
-# # # # #!/bin/bash\n" 
+cat <<EOF > $FIRSTBOOT_FILE
+!/bin/bash\n" 
 
-# # # # {		# Everything in the brackets will go to the log file\n" >> 
+{		# Everything in the brackets will go to the log file\n"
 
-# # # # echo "raspi-config do_hostname"
-# # # # raspi-config nonint do_hostname $RASPI_HOSTNAME
+echo "Enable predictable network interface names"
+echo "raspi-config do_net_names"
+raspi-config nonint do_net_names 0
 
-# # # # # Enable SSH for login
-# # # # echo "Enable SSH"
-# # # # systemctl enable ssh
-# # # # systemctl start ssh
+# Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
 
-# # # # # Enable predictable network interface names
-# # # # echo "raspi-config do_net_names"
-# # # # raspi-config nonint do_net_names 0
+echo "Daemon Reload"
+systemctl daemon-reload
+echo "Install audio-device-playing-watcher.service"
+systemctl start audio-device-playing-watcher.service
+systemctl enable audio-device-playing-watcher.service
 
-# # # # # Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
+echo "Destroy firstboot script"
+echo "rm $FIRSTBOOT_FILE"
+rm -f $FIRSTBOOT_FILE
 
-# # # # echo "daemon-reload"
-# # # # systemctl daemon-reload
+echo "Restore original rc.local"
+rm -f /etc/rc.local
+mv /etc/rc.local.bak /etc/rc.local
 
-# # # # # Removing systemd start arguments in the cmdline.txt to be replaced down below with our own firstboot.sh script
-# # # # # As we do not know when exactly the cmdline.txt file is moved, we try it in both paths
-# # # # echo "sed cmdline.txt"
-# # # # sed -i 's| systemd.run.*||g' /boot/cmdline.txt
-# # # # sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt
-# # # # sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt
-# # # # sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt
-# # # # echo "rm $FIRSTBOOT_FILE"
-# # # # rm -f $FIRSTBOOT_FILE
-# # # # exit 0
-# # # # } 2>&1 | tee /var/log/firstboot.log
-# # # # EOF
+echo "Exit..."
+exit 0
+} 2>&1 | tee /var/log/lab-box-firstboot.log
+EOF
 
-# # # # chmod +x $FIRSTBOOT_FILE
+chmod +x $FIRSTBOOT_FILE
 
-# # # # cat $FIRSTBOOT_FILE
+cat $FIRSTBOOT_FILE
 
 # # # # # Move the original file to a backup file, replace a possible new line character at the end of the line and write it to the original filename, then append our new stuff
 # # # # # The 2 double quotes between the variable and the appendix _org is intentional. This appends the variable and "_org" string.
@@ -116,10 +110,22 @@ fi
 # # # # tr -d '\n' < "$CMDLINE_FILE""_org" > $CMDLINE_FILE
 # # # # echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
 # # # # cat $CMDLINE_FILE
+mv /etc/rc.local /etc/rc.local.bak
+cat <<EOF > /etc/rc.local
+/$FIRSTBOOT_FILE
+EOF
+chmod +x /etc/rc.local
 
 
 # ENABLE SSH (without init script, but onboard ssh enable service) -------------------------------------------------------------------------------------------
 touch /boot/ssh
+
+
+# Copy the audioDevicePlayingWatcher script to monitor the status of the audio interfaces ---------------------------------------------------------------------
+mkdir /root/audioDevicePlayingWatcher
+cp /files/audioDevicePlayingWatcher/audioDevicePlayingWatcher.py /root/audioDevicePlayingWatcher
+cp /files/audioDevicePlayingWatcher/audio-device-playing-watcher.service /lib/systemd/system/
+chmod 644 /lib/systemd/system/audio-device-playing-watcher.service
 
 
 # Image information file --------------------------------------------------------------------------------------------------------------------------------------

@@ -11,8 +11,8 @@ install_cleanup_trap
 # CustoPiZer: If you need to make additional files available inside the image during build, place them inside scripts/files -- they will be mounted inside the image build under /files
 
 
+# Copy config.txt for the hardware setup ----------------------------------------------------------------------------------------------------------------------
 # To enable all the hardware like I2S, we copy our custom config.txt into the image. This way nobody has to deal with the 'raspi-config' tool later
-
 
 # Despite the config.txt and cmdline.txt are moved into /boot/firmware folders, we write to the /boot folder directly.
 # The files from the boot folder are automatically moved into the /boot/firmware folder on first start (at time of writing 13.11.2024)
@@ -22,7 +22,6 @@ export OUTPUT_FILE="/boot/config.txt"
 if [ -d /boot/firmware ]; then
 	export OUTPUT_FILE="/boot/firmware/config.txt"
 fi
-
 
 echo_green "Using image width: \"$IMAGE_BITWIDTH\""
 echo_green "Writing config.txt to \"$OUTPUT_FILE\""
