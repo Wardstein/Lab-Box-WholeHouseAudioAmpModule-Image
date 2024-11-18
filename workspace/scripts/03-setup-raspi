@@ -92,7 +92,7 @@ echo "rm $FIRSTBOOT_FILE"
 rm -f $FIRSTBOOT_FILE
 
 # echo "Restore original rc.local"
-# rm -f /etc/rc.local
+rm -f /etc/rc.local
 # mv /etc/rc.local.bak /etc/rc.local
 
 echo "Exit..."
