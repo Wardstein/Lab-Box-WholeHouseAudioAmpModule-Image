@@ -105,7 +105,7 @@ cat $FIRSTBOOT_FILE
 
 # mv /etc/rc.local /etc/rc.local.bak
 cat <<EOF > /etc/rc.local
-/$FIRSTBOOT_FILE
+$FIRSTBOOT_FILE
 EOF
 chmod +x /etc/rc.local
 
