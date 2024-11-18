@@ -62,56 +62,64 @@ fi
 
 
 # CREATE A ONE-TIME SETUP FILE --------------------------------------------------------------------------------------------------------------------------------
-FIRSTBOOT_FILE="/firstboot.sh"
-rm -f $FIRSTBOOT_FILE
+# COMMENTED OUT, AS I CANNOT GET IT TO WORK IN DEBIAN 12 BOOKWORM ANYMORE. EVERYTIME THE START ERRORS AT STARTUP AND IT TELLS, THAT DEPENDENCIES FAILED FOR
+# FOR "kernel-command-line.target". DON'T KNOW IF THE SCRIPT IS NOT READABLE AT THIS POINT (DOES NOT MATTER IF THE SCRIPT IS IN / OR /BOOT)
+# GIVING UP ON THIS, AS THE RASPBERRY PI IMAGER USES THE SAME METHOD WITH THEIR OWN INIT SCRIPTS FOR THEIR SETTINGS ALSO WHICH IF USED MESSES UP THIS SCRIPT HERE ALSO!
 
-# Source of the logging to file method: https://stackoverflow.com/a/315113/3402598
+# # # # FIRSTBOOT_FILE="/firstboot.sh"
+# # # # rm -f $FIRSTBOOT_FILE
 
-cat <<EOF > $FIRSTBOOT_FILE
-#!/bin/bash\n" 
+# # # # # Source of the logging to file method: https://stackoverflow.com/a/315113/3402598
 
-{		# Everything in the brackets will go to the log file\n" >> 
+# # # # cat <<EOF > $FIRSTBOOT_FILE
+# # # # #!/bin/bash\n" 
 
-echo "raspi-config do_hostname"
-raspi-config nonint do_hostname $RASPI_HOSTNAME
+# # # # {		# Everything in the brackets will go to the log file\n" >> 
 
-# Enable SSH for login
-echo "Enable SSH"
-systemctl enable ssh
-systemctl start ssh
+# # # # echo "raspi-config do_hostname"
+# # # # raspi-config nonint do_hostname $RASPI_HOSTNAME
 
-# Enable predictable network interface names
-echo "raspi-config do_net_names"
-raspi-config nonint do_net_names 0
+# # # # # Enable SSH for login
+# # # # echo "Enable SSH"
+# # # # systemctl enable ssh
+# # # # systemctl start ssh
 
-# Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
+# # # # # Enable predictable network interface names
+# # # # echo "raspi-config do_net_names"
+# # # # raspi-config nonint do_net_names 0
 
-echo "daemon-reload"
-systemctl daemon-reload
+# # # # # Hardware interfaces like SPI, I2C and Serial are already set in the config.txt file in a prior CustoPiZer step
 
-# Removing systemd start arguments in the cmdline.txt to be replaced down below with our own firstboot.sh script
-# As we do not know when exactly the cmdline.txt file is moved, we try it in both paths
-echo "sed cmdline.txt"
-sed -i 's| systemd.run.*||g' /boot/cmdline.txt
-sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt
-sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt
-sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt
-echo "rm $FIRSTBOOT_FILE"
-rm -f $FIRSTBOOT_FILE
-exit 0
-} 2>&1 | tee /var/log/firstboot.log
-EOF
+# # # # echo "daemon-reload"
+# # # # systemctl daemon-reload
 
-chmod +x $FIRSTBOOT_FILE
+# # # # # Removing systemd start arguments in the cmdline.txt to be replaced down below with our own firstboot.sh script
+# # # # # As we do not know when exactly the cmdline.txt file is moved, we try it in both paths
+# # # # echo "sed cmdline.txt"
+# # # # sed -i 's| systemd.run.*||g' /boot/cmdline.txt
+# # # # sed -i 's| systemd.run.*||g' /boot/firmware/cmdline.txt
+# # # # sed -i 's| systemd.unit=kernel.*||g' /boot/cmdline.txt
+# # # # sed -i 's| systemd.unit=kernel.*||g' /boot/firmware/cmdline.txt
+# # # # echo "rm $FIRSTBOOT_FILE"
+# # # # rm -f $FIRSTBOOT_FILE
+# # # # exit 0
+# # # # } 2>&1 | tee /var/log/firstboot.log
+# # # # EOF
 
-cat $FIRSTBOOT_FILE
+# # # # chmod +x $FIRSTBOOT_FILE
 
-# Move the original file to a backup file, replace a possible new line character at the end of the line and write it to the original filename, then append our new stuff
-# The 2 double quotes between the variable and the appendix _org is intentional. This appends the variable and "_org" string.
-mv $CMDLINE_FILE "$CMDLINE_FILE""_org"
-tr -d '\n' < "$CMDLINE_FILE""_org" > $CMDLINE_FILE
-echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
-cat $CMDLINE_FILE
+# # # # cat $FIRSTBOOT_FILE
+
+# # # # # Move the original file to a backup file, replace a possible new line character at the end of the line and write it to the original filename, then append our new stuff
+# # # # # The 2 double quotes between the variable and the appendix _org is intentional. This appends the variable and "_org" string.
+# # # # mv $CMDLINE_FILE "$CMDLINE_FILE""_org"
+# # # # tr -d '\n' < "$CMDLINE_FILE""_org" > $CMDLINE_FILE
+# # # # echo -n " systemd.run=$FIRSTBOOT_FILE systemd.run_success_action=reboot systemd.unit=kernel-command-line.target" >> $CMDLINE_FILE
+# # # # cat $CMDLINE_FILE
+
+
+# ENABLE SSH (without init script, but onboard ssh enable service) -------------------------------------------------------------------------------------------
+touch /boot/ssh
 
 
 # Image information file --------------------------------------------------------------------------------------------------------------------------------------
