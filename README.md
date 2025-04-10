@@ -23,6 +23,9 @@ Alternatively you can use [Balena Etcher](https://etcher.balena.io/), but it doe
 * When using "auto connect" via mDNS (the clients finds the server automatically in the network) and you have IPv6 enabled on the client (by default on this image), the server must listen on IPv6 also. All modern OSes prefer IPv6 over IPv4, so the snapclient tries to connect to the server via IPv6. To enable the server listening on IPv6, add `bind_to_address = ::` in the `[stream]` section of the `/etc/snapserver.conf` config file. Defining `bind_to_address = ::` in the config file, will automatically also listen on IPv4.
 
 
+# Using other audio interface
+This image defines the `hifiberry-dac` overlay in the boot config, as it is meant for an I2S DAC within the smart amp used on the module. If you want to use this image with a USB audio interface, you can change this with the `raspi-config` command. Select `1 System Options` -> `S2 Audio` -> and then your audio interface. Exit with "Finish". In my tests, I needed to re?-add the "snapclient" image user to the `audio` group (although this is already done in the [setup-raspi step of the setup scripts](https://github.com/Wardstein/Lab-Box-WholeHouseAudioAmpModule-Image/blob/main/workspace/scripts/03-setup-raspi#L19). This is done by running `sudo usermod -aG audio snapclient` - maybe this needs to be done after changing to the USB audio interface?
+
 # Missing
 
 
